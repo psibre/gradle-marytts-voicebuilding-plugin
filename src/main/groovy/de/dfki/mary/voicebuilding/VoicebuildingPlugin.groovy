@@ -706,8 +706,23 @@ class VoicebuildingPlugin implements Plugin<Project> {
             }
         }
 
-        project.processDataResources.rename {
-            "lib/voices/$project.voice.name/$it"
+        project.processDataResources {
+            dependsOn project.legacyAcousticFeatureFileWriter,
+                    project.legacyBasenameTimelineMaker,
+                    project.legacyJoinCostFileMaker,
+                    project.legacyWaveTimelineMaker,
+                    project.legacyHalfPhoneUnitfileWriter
+            from project.legacyBuildDir
+            include 'halfphoneFeatures_ac.mry',
+                    'halfphoneUnits.mry',
+                    'joinCostFeatures.mry',
+                    'timeline_basenames.mry',
+                    'timeline_waveforms.TextGrid',
+                    'timeline_waveforms.mry',
+                    'timeline_waveforms.wav'
+            rename {
+                "lib/voices/$project.voice.name/$it"
+            }
         }
 
         project.test {
