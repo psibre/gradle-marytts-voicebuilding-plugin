@@ -12,8 +12,6 @@ import org.gradle.api.tasks.bundling.Zip
 
 import groovy.xml.*
 
-import org.apache.commons.codec.digest.DigestUtils
-
 import de.dfki.mary.voicebuilding.tasks.legacy.LegacyVoiceImportTask
 
 import marytts.LocalMaryInterface
@@ -776,7 +774,8 @@ class VoicebuildingPlugin implements Plugin<Project> {
             inputs.files zipFile
             outputs.files xmlFile
             doLast {
-                def zipFileHash = DigestUtils.md5Hex(new FileInputStream(zipFile))
+                ant.checksum(file: zipFile, property: "${zipFile.name}.md5")
+                def zipFileHash = ant.properties["${zipFile.name}.md5"]
                 def builder = new StreamingMarkupBuilder()
                 def xml = builder.bind {
                     'marytts-install'(xmlns: 'http://mary.dfki.de/installer') {
