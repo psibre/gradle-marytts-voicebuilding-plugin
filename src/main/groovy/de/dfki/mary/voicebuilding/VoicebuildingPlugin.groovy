@@ -772,7 +772,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
         project.task('legacyComponentXml') {
             dependsOn project.legacyComponentZip
             def zipFile = project.legacyComponentZip.outputs.files.singleFile
-            def xmlFile = project.file("$project.distsDir/$project.name-$project.version-component-descriptor.xml")
+            def xmlFile = project.file("$project.distsDir/$project.name-$project.version-component.xml")
             inputs.files zipFile
             outputs.files xmlFile
             doLast {
