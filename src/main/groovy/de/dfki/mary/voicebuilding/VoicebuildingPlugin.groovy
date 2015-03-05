@@ -45,11 +45,9 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 set key, value
             }
             voice.nameCamelCase = voice.name?.split(/[^_A-Za-z0-9]/).collect { it.capitalize() }.join()
-            voice.region = voice.region ?: voice.language?.toUpperCase()
-            voice.locale = voice.locale ?: [voice.language, voice.region].join('_')
-            voice.maryLocale = voice.language?.equalsIgnoreCase(voice.region) ? voice.language : voice.locale
-            voice.localeXml = [voice.language, voice.region].join('-')
-            voice.maryLocaleXml = voice.language?.equalsIgnoreCase(voice.region) ? voice.language : voice.localeXml
+            voice.locale = voice.locale?.country ? new Locale(voice.locale.language, voice.locale.country) : new Locale(voice.locale.language)
+            voice.localeXml = [voice.locale.language, voice.locale.country].join('-')
+            voice.maryLocaleXml = voice.locale.language.equalsIgnoreCase(voice.locale.country) ? voice.locale.language : voice.localeXml
         }
 
         project.status = project.version.endsWith('SNAPSHOT') ? 'integration' : 'release'
@@ -106,7 +104,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             project.dependencies {
-                compile "de.dfki.mary:marytts-lang-$project.voice.language:$project.maryttsVersion"
+                compile "de.dfki.mary:marytts-lang-$project.voice.locale.language:$project.maryttsVersion"
                 legacy("de.dfki.mary:marytts-builder:$project.maryttsVersion") {
                     exclude module: 'mwdumper'
                     exclude module: 'sgt'
@@ -203,7 +201,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
             doFirst {
                 destDir.mkdirs()
                 mary = new LocalMaryInterface()
-                mary.locale = new Locale(project.voice.maryLocale)
+                mary.locale = project.voice.locale
                 mary.outputType = 'ALLOPHONES'
             }
             doLast {
@@ -263,11 +261,11 @@ class VoicebuildingPlugin implements Plugin<Project> {
             doLast {
                 def fpm
                 try {
-                    fpm = Class.forName("marytts.language.${project.voice.language}.features.FeatureProcessorManager").newInstance()
+                    fpm = Class.forName("marytts.language.${project.voice.locale.language}.features.FeatureProcessorManager").newInstance()
                 } catch (e) {
                     logger.info "Reflection failed: $e"
-                    logger.info "Instantiating generic FeatureProcessorManager for locale $project.voice.maryLocale"
-                    fpm = new FeatureProcessorManager(project.voice.maryLocale)
+                    logger.info "Instantiating generic FeatureProcessorManager for locale $project.voice.locale"
+                    fpm = new FeatureProcessorManager(project.voice.locale)
                 }
                 def featureNames = fpm.listByteValuedFeatureProcessorNames().tokenize() + fpm.listShortValuedFeatureProcessorNames().tokenize()
                 featureFile.text = featureNames.join('\n')
@@ -283,7 +281,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
             def mary
             doFirst {
                 mary = new LocalMaryInterface()
-                mary.locale = new Locale(project.voice.maryLocale)
+                mary.locale = project.voice.locale
                 mary.inputType = 'ALLOPHONES'
                 mary.outputType = 'TARGETFEATURES'
                 def features = project.generateFeatureList.featureFile.readLines().minus(['phone', 'halfphone_lr', 'halfphone_unitname']).plus(0, ['phone'])
@@ -306,7 +304,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
             def mary
             doFirst {
                 mary = new LocalMaryInterface()
-                mary.locale = new Locale(project.voice.maryLocale)
+                mary.locale = project.voice.locale
                 mary.inputType = 'ALLOPHONES'
                 mary.outputType = 'HALFPHONE_TARGETFEATURES'
                 def features = project.generateFeatureList.featureFile.readLines().minus(['halfphone_unitname']).plus(0, ['halfphone_unitname'])
@@ -658,8 +656,8 @@ class VoicebuildingPlugin implements Plugin<Project> {
                         fpm = Class.forName("marytts.language.${project.voice.language}.features.FeatureProcessorManager").newInstance()
                     } catch (e) {
                         logger.info "Reflection failed: $e"
-                        logger.info "Instantiating generic FeatureProcessorManager for locale $project.voice.maryLocale"
-                        fpm = new FeatureProcessorManager(project.voice.maryLocale)
+                        logger.info "Instantiating generic FeatureProcessorManager for locale $project.voice.locale"
+                        fpm = new FeatureProcessorManager(project.voice.locale)
                     }
                     featureFile.withWriter { dest ->
                         dest.println 'ByteValuedFeatureProcessors'
@@ -702,7 +700,17 @@ class VoicebuildingPlugin implements Plugin<Project> {
             }
             dependsOn project.generateServiceLoader, project.generateVoiceConfig
             if (project.voice.type == 'unit selection') {
-                dependsOn project.generateFeatureFiles
+                dependsOn project.generateFeatureFiles,
+                        project.legacyCARTBuilder,
+                        project.processCarts
+                from project.legacyBuildDir
+                include 'cart.mry',
+                        'dur.tree',
+                        'f0.left.tree',
+                        'f0.mid.tree',
+                        'f0.right.tree',
+                        'halfphoneUnitFeatureDefinition_ac.txt',
+                        'joinCostWeights.txt'
             }
         }
 
@@ -772,13 +780,13 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 def builder = new StreamingMarkupBuilder()
                 def xml = builder.bind {
                     'marytts-install'(xmlns: 'http://mary.dfki.de/installer') {
-                        voice(gender: project.voice.gender, locale: project.voice.maryLocale, name: project.voice.name, type: project.voice.type, version: project.version) {
+                        voice(gender: project.voice.gender, locale: project.voice.locale, name: project.voice.name, type: project.voice.type, version: project.version) {
                             delegate.description project.voice.description
                             license(href: project.voice.license.url)
                             'package'(filename: zipFile.name, md5sum: zipFileHash, size: zipFile.size()) {
                                 location(folder: true, href: "http://mary.dfki.de/download/$project.maryttsVersion/")
                             }
-                            depends(language: project.voice.maryLocaleXml, version: project.maryttsVersion)
+                            depends(language: project.voice.locale, version: project.maryttsVersion)
                         }
                     }
                 }

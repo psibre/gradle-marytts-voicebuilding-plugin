@@ -49,7 +49,7 @@ public class LoadVoiceIT {
 	public void canProcessTextToSpeech() throws Exception {
 		MaryInterface mary = new LocalMaryInterface();
 		mary.setVoice(new Config().getName());
-		Locale locale = new Locale(${voice.maryLocale.split('_').collect{ "\"$it\"" }.join(', ')});
+		Locale locale = new Locale("$voice.locale.language", "$voice.locale.country");
 		String example = MaryDataType.getExampleText(MaryDataType.TEXT, locale);
 		AudioInputStream audio = mary.generateAudio(example);
 		assertNotNull(audio);
@@ -58,7 +58,7 @@ public class LoadVoiceIT {
 	@Test
 	public void canProcessToTargetfeatures() throws Exception {
 		MaryInterface mary = new LocalMaryInterface();
-		Locale locale = new Locale(${voice.maryLocale.split('_').collect{ "\"$it\"" }.join(', ')});
+        Locale locale = new Locale("$voice.locale.language", "$voice.locale.country");
 		mary.setLocale(locale);
 		mary.setOutputType(MaryDataType.TARGETFEATURES.name());
 		String example = MaryDataType.getExampleText(MaryDataType.TEXT, locale);
@@ -69,7 +69,7 @@ public class LoadVoiceIT {
 	@Test${voice.maryLocale in ['fr'] ? '(expected = java.lang.AssertionError.class)' : ''}
 	public void canProcessTokensToTargetfeatures() throws Exception {
 		MaryInterface mary = new LocalMaryInterface();
-		Locale locale = new Locale(${voice.maryLocale.split('_').collect{ "\"$it\"" }.join(', ')});
+        Locale locale = new Locale("$voice.locale.language", "$voice.locale.country");
 		mary.setLocale(locale);
 		mary.setInputType(MaryDataType.TOKENS.name());
 		mary.setOutputType(MaryDataType.TARGETFEATURES.name());
@@ -81,7 +81,7 @@ public class LoadVoiceIT {
 	@Test${voice.maryLocale in ['fr'] ? '(expected = java.lang.AssertionError.class)' : ''}
 	public void canProcessTokensToSpeech() throws Exception {
 		MaryInterface mary = new LocalMaryInterface();
-		Locale locale = new Locale(${voice.maryLocale.split('_').collect{ "\"$it\"" }.join(', ')});
+        Locale locale = new Locale("$voice.locale.language", "$voice.locale.country");
 		mary.setLocale(locale);
 		mary.setInputType(MaryDataType.TOKENS.name());
 		Document doc = getExampleTokens(mary.getLocale());
