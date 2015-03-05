@@ -780,13 +780,13 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 def builder = new StreamingMarkupBuilder()
                 def xml = builder.bind {
                     'marytts-install'(xmlns: 'http://mary.dfki.de/installer') {
-                        voice(gender: project.voice.gender, locale: project.voice.locale, name: project.voice.name, type: project.voice.type, version: project.version) {
+                        voice(gender: project.voice.gender, locale: project.voice.localeXml, name: project.voice.name, type: project.voice.type, version: project.version) {
                             delegate.description project.voice.description
                             license(href: project.voice.license.url)
                             'package'(filename: zipFile.name, md5sum: zipFileHash, size: zipFile.size()) {
                                 location(folder: true, href: "http://mary.dfki.de/download/$project.maryttsVersion/")
                             }
-                            depends(language: project.voice.locale, version: project.maryttsVersion)
+                            depends(language: project.voice.localeXml, version: project.maryttsVersion)
                         }
                     }
                 }
@@ -808,7 +808,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
                     'artifact' project.name
                     'version' project.version
                     'name' project.voice.name
-                    'language' project.voice.language
+                    'language' project.voice.locale.language
                     'gender' project.voice.gender
                     'type' project.voice.type
                     'description' project.voice.description
