@@ -723,9 +723,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
                     'halfphoneUnits.mry',
                     'joinCostFeatures.mry',
                     'timeline_basenames.mry',
-                    'timeline_waveforms.TextGrid',
-                    'timeline_waveforms.mry',
-                    'timeline_waveforms.wav'
+                    'timeline_waveforms.mry'
             rename {
                 "lib/voices/$project.voice.name/$it"
             }
