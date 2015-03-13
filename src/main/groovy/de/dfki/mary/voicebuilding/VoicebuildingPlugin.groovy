@@ -115,17 +115,23 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 project.sourceSets.test.compileClasspath += project.sourceSets.data.output
 
                 project.processResources {
-                    dependsOn project.generateFeatureFiles,
-                            project.legacyCARTBuilder,
-                            project.processCarts
-                    from project.legacyBuildDir
-                    include 'cart.mry',
-                            'dur.tree',
-                            'f0.left.tree',
-                            'f0.mid.tree',
-                            'f0.right.tree',
-                            'halfphoneUnitFeatureDefinition_ac.txt',
-                            'joinCostWeights.txt'
+                    def resourceFileNames = source.files.collect { it.name }
+                    [
+                            'cart.mry'                             : 'legacyCARTBuilder',
+                            'dur.tree'                             : 'processCarts',
+                            'f0.left.tree'                         : 'processCarts',
+                            'f0.mid.tree'                          : 'processCarts',
+                            'f0.right.tree'                        : 'processCarts',
+                            'halfphoneUnitFeatureDefinition_ac.txt': 'generateFeatureFiles',
+                            'joinCostWeights.txt'                  : 'generateFeatureFiles'
+                    ].each { fileName, taskName ->
+                        if (!resourceFileNames.contains(fileName)) {
+                            dependsOn taskName
+                            from project.legacyBuildDir, {
+                                include fileName
+                            }
+                        }
+                    }
                 }
 
                 project.processDataResources {
