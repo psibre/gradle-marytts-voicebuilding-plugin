@@ -65,12 +65,10 @@ class VoicebuildingPlugin implements Plugin<Project> {
                     srcDir project.generatedSrcDir
                 }
             }
-            data
             test {
                 java {
                     srcDir project.generatedTestSrcDir
                 }
-                compileClasspath += data.output
             }
         }
 
@@ -112,25 +110,50 @@ class VoicebuildingPlugin implements Plugin<Project> {
 
             addTasks(project)
 
-            project.artifacts {
-                if (project.voice.type == 'unit selection') {
+            if (project.voice.type == 'unit selection') {
+                project.sourceSets.create('data')
+                project.sourceSets.test.compileClasspath += project.sourceSets.data.output
+
+                project.processDataResources {
+                    dependsOn project.legacyAcousticFeatureFileWriter,
+                            project.legacyBasenameTimelineMaker,
+                            project.legacyJoinCostFileMaker,
+                            project.legacyWaveTimelineMaker,
+                            project.legacyHalfPhoneUnitfileWriter
+                    from project.legacyBuildDir
+                    include 'halfphoneFeatures_ac.mry',
+                            'halfphoneUnits.mry',
+                            'joinCostFeatures.mry',
+                            'timeline_basenames.mry',
+                            'timeline_waveforms.mry'
+                    rename {
+                        "lib/voices/$project.voice.name/$it"
+                    }
+                }
+
+                project.test.systemProperty 'mary.base', project.sourceSets.data.output.resourcesDir
+
+                project.legacyComponentZip {
+                    from project.processDataResources
+                }
+
+                project.task('dataZip', type: Zip) {
+                    from project.processDataResources
+                    classifier 'data'
+                }
+
+                project.artifacts {
                     archives project.dataZip
                 }
             }
         }
 
         project.task('legacyComponentZip', type: Zip) {
-            from project.processDataResources
             from(project.jar) {
                 rename {
                     "lib/$it"
                 }
             }
-        }
-
-        project.task('dataZip', type: Zip) {
-            from project.processDataResources
-            classifier 'data'
         }
     }
 
@@ -712,25 +735,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
             }
         }
 
-        project.processDataResources {
-            dependsOn project.legacyAcousticFeatureFileWriter,
-                    project.legacyBasenameTimelineMaker,
-                    project.legacyJoinCostFileMaker,
-                    project.legacyWaveTimelineMaker,
-                    project.legacyHalfPhoneUnitfileWriter
-            from project.legacyBuildDir
-            include 'halfphoneFeatures_ac.mry',
-                    'halfphoneUnits.mry',
-                    'joinCostFeatures.mry',
-                    'timeline_basenames.mry',
-                    'timeline_waveforms.mry'
-            rename {
-                "lib/voices/$project.voice.name/$it"
-            }
-        }
-
         project.test {
-            systemProperty 'mary.base', project.sourceSets.data.output.resourcesDir
             systemProperty 'log4j.logger.marytts', 'DEBUG,stderr'
             maxHeapSize = '1g'
         }
