@@ -114,6 +114,20 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 project.sourceSets.create('data')
                 project.sourceSets.test.compileClasspath += project.sourceSets.data.output
 
+                project.processResources {
+                    dependsOn project.generateFeatureFiles,
+                            project.legacyCARTBuilder,
+                            project.processCarts
+                    from project.legacyBuildDir
+                    include 'cart.mry',
+                            'dur.tree',
+                            'f0.left.tree',
+                            'f0.mid.tree',
+                            'f0.right.tree',
+                            'halfphoneUnitFeatureDefinition_ac.txt',
+                            'joinCostWeights.txt'
+                }
+
                 project.processDataResources {
                     def resourceFileNames = source.files.collect { it.name }
                     [
@@ -724,19 +738,6 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 "marytts/voice/$project.voice.nameCamelCase/$it"
             }
             dependsOn project.generateServiceLoader, project.generateVoiceConfig
-            if (project.voice.type == 'unit selection') {
-                dependsOn project.generateFeatureFiles,
-                        project.legacyCARTBuilder,
-                        project.processCarts
-                from project.legacyBuildDir
-                include 'cart.mry',
-                        'dur.tree',
-                        'f0.left.tree',
-                        'f0.mid.tree',
-                        'f0.right.tree',
-                        'halfphoneUnitFeatureDefinition_ac.txt',
-                        'joinCostWeights.txt'
-            }
         }
 
         project.test {
