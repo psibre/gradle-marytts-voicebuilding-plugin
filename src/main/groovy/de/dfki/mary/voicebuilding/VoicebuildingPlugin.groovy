@@ -115,17 +115,21 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 project.sourceSets.test.compileClasspath += project.sourceSets.data.output
 
                 project.processDataResources {
-                    dependsOn project.legacyAcousticFeatureFileWriter,
-                            project.legacyBasenameTimelineMaker,
-                            project.legacyJoinCostFileMaker,
-                            project.legacyWaveTimelineMaker,
-                            project.legacyHalfPhoneUnitfileWriter
-                    from project.legacyBuildDir
-                    include 'halfphoneFeatures_ac.mry',
-                            'halfphoneUnits.mry',
-                            'joinCostFeatures.mry',
-                            'timeline_basenames.mry',
-                            'timeline_waveforms.mry'
+                    def resourceFileNames = source.files.collect { it.name }
+                    [
+                            'halfphoneFeatures_ac.mry': 'legacyAcousticFeatureFileWriter',
+                            'halfphoneUnits.mry'      : 'legacyHalfPhoneUnitfileWriter',
+                            'joinCostFeatures.mry'    : 'legacyJoinCostFileMaker',
+                            'timeline_basenames.mry'  : 'legacyBasenameTimelineMaker',
+                            'timeline_waveforms.mry'  : 'legacyWaveTimelineMaker'
+                    ].each { fileName, taskName ->
+                        if (!resourceFileNames.contains(fileName)) {
+                            dependsOn taskName
+                            from project.legacyBuildDir, {
+                                include fileName
+                            }
+                        }
+                    }
                     rename {
                         "lib/voices/$project.voice.name/$it"
                     }
