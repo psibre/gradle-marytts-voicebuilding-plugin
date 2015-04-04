@@ -4,10 +4,12 @@ import groovy.json.JsonBuilder
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.MavenPlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.bundling.Zip
 
 import groovy.xml.*
@@ -168,6 +170,27 @@ class VoicebuildingPlugin implements Plugin<Project> {
 
                 project.artifacts {
                     archives project.dataZip
+                }
+            }
+        }
+
+        project.task('run', type: JavaExec) {
+            description 'Runs a local MaryTTS server instance with this voice loaded'
+            group 'Verification'
+            workingDir project.buildDir
+            classpath project.configurations.runtime, project.jar
+            main 'marytts.server.Mary'
+            systemProperties System.properties
+            if (logger.isEnabled(LogLevel.INFO)) {
+                systemProperties['log4j.logger.marytts'] = 'INFO,stderr'
+            }
+            if (logger.isEnabled(LogLevel.DEBUG)) {
+                systemProperties['log4j.logger.marytts'] = 'DEBUG,stderr'
+            }
+            project.afterEvaluate {
+                if (project.sourceSets.findByName('data')) {
+                    dependsOn project.processDataResources
+                    systemProperties['mary.base'] = project.sourceSets.data.output.resourcesDir
                 }
             }
         }
