@@ -271,10 +271,10 @@ class VoicebuildingPlugin implements Plugin<Project> {
             }
             doLast {
                 [inputs.files as List, outputs.files as List].transpose().each { inFile, outFile ->
-                    def doc = mary.generateXML inFile.text
-                    def xmlStr = XmlUtil.serialize doc.documentElement
-                    def xml = parser.parseText xmlStr
-                    outFile.text = XmlUtil.serialize xml
+                    def doc = mary.generateXML(inFile.text)
+                    def xmlStr = XmlUtil.serialize(doc.documentElement)
+                    def xml = parser.parseText(xmlStr)
+                    outFile.text = XmlUtil.serialize(xml)
                 }
             }
         }
@@ -343,13 +343,13 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 mary.locale = project.voice.locale
                 mary.inputType = 'ALLOPHONES'
                 mary.outputType = 'TARGETFEATURES'
-                def features = project.generateFeatureList.featureFile.readLines().minus(['phone', 'halfphone_lr', 'halfphone_unitname']).plus(0, ['phone'])
-                mary.outputTypeParams = features.join(' ')
+                def features = project.generateFeatureList.featureFile.readLines() - ['phone', 'halfphone_lr', 'halfphone_unitname']
+                mary.outputTypeParams = "phone ${features.join(' ')}"
             }
             doLast {
                 [inputs.files as List, outputs.files as List].transpose().each { inFile, outFile ->
-                    def doc = DomUtils.parseDocument inFile
-                    outFile.text = mary.generateText doc
+                    def doc = DomUtils.parseDocument(inFile)
+                    outFile.text = mary.generateText(doc)
                 }
             }
         }
@@ -364,13 +364,13 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 mary.locale = project.voice.locale
                 mary.inputType = 'ALLOPHONES'
                 mary.outputType = 'HALFPHONE_TARGETFEATURES'
-                def features = project.generateFeatureList.featureFile.readLines().minus(['halfphone_unitname']).plus(0, ['halfphone_unitname'])
-                mary.outputTypeParams = features.join(' ')
+                def features = project.generateFeatureList.featureFile.readLines() - ['halfphone_unitname']
+                mary.outputTypeParams = "halfphone_unitname ${features.join(' ')}"
             }
             doLast {
                 [inputs.files as List, outputs.files as List].transpose().each { inFile, outFile ->
-                    def doc = DomUtils.parseDocument inFile
-                    outFile.text = mary.generateText doc
+                    def doc = DomUtils.parseDocument(inFile)
+                    outFile.text = mary.generateText(doc)
                 }
             }
         }
@@ -439,17 +439,17 @@ class VoicebuildingPlugin implements Plugin<Project> {
             ext.featsFile = project.file("$temporaryDir/dur.feats")
             outputs.files featsFile
             doLast {
-                def featureFile = FeatureFileReader.getFeatureFileReader project.legacyPhoneFeatureFileWriter.featureFile.path
+                def featureFile = FeatureFileReader.getFeatureFileReader(project.legacyPhoneFeatureFileWriter.featureFile.path)
                 def featureDefinition = featureFile.featureDefinition
                 def unitFile = new UnitFileReader(project.legacyPhoneUnitfileWriter.unitFile.path)
                 featsFile.withWriter { feats ->
                     (0..unitFile.numberOfUnits - 1).each { u ->
-                        def unit = unitFile.getUnit u
+                        def unit = unitFile.getUnit(u)
                         def samples = unit.duration
                         def duration = samples / unitFile.sampleRate
                         if (duration > 0.01) {
-                            def features = featureFile.getFeatureVector u
-                            feats.println "$duration ${featureDefinition.toFeatureString features}"
+                            def features = featureFile.getFeatureVector(u)
+                            feats.println "$duration ${featureDefinition.toFeatureString(features)}"
                         }
                     }
                 }
@@ -467,12 +467,12 @@ class VoicebuildingPlugin implements Plugin<Project> {
                     desc.println '('
                     desc.println '( segment_duration float )'
                     featureDefinition.featureNameArray.eachWithIndex { feature, f ->
-                        def values = featureDefinition.getPossibleValues f
+                        def values = featureDefinition.getPossibleValues(f)
                         desc.print "( $feature "
                         if (featureDefinition.isContinuousFeature(f) || values.length == 20 && values.last() == '19') {
                             desc.print 'float'
                         } else {
-                            desc.print values.collect { "\"${it.replace '"', '\\\"'}\"" }.join(' ')
+                            desc.print values.collect { "\"${it.replace('"', '\\\"')}\"" }.join(' ')
                         }
                         desc.println " )"
                     }
@@ -507,16 +507,16 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 def midFeats = new FileWriter(midFeatsFile)
                 def rightFeats = new FileWriter(rightFeatsFile)
                 // MaryTTS files needed to extract F0 baked into unit datagram durations
-                def featureFile = FeatureFileReader.getFeatureFileReader project.legacyPhoneFeatureFileWriter.featureFile.path
+                def featureFile = FeatureFileReader.getFeatureFileReader(project.legacyPhoneFeatureFileWriter.featureFile.path)
                 def featureDefinition = featureFile.featureDefinition
                 def unitFile = new UnitFileReader(project.legacyPhoneUnitfileWriter.unitFile.path)
                 def waveTimeline = new TimelineReader(project.legacyWaveTimelineMaker.timelineFile.path)
                 // in the absence of high-level feature value accessors, need feature indices
-                def numSegsFromSylStartFeatureIndex = featureDefinition.getFeatureIndex 'segs_from_syl_start'
-                def numSegsFromEndStartFeatureIndex = featureDefinition.getFeatureIndex 'segs_from_syl_end'
-                def phoneFeatureIndex = featureDefinition.getFeatureIndex 'phone'
-                def isVowelFeatureIndex = featureDefinition.getFeatureIndex 'ph_vc'
-                def isVoicedConsonantFeatureIndex = featureDefinition.getFeatureIndex 'ph_cvox'
+                def numSegsFromSylStartFeatureIndex = featureDefinition.getFeatureIndex('segs_from_syl_start')
+                def numSegsFromEndStartFeatureIndex = featureDefinition.getFeatureIndex('segs_from_syl_end')
+                def phoneFeatureIndex = featureDefinition.getFeatureIndex('phone')
+                def isVowelFeatureIndex = featureDefinition.getFeatureIndex('ph_vc')
+                def isVoicedConsonantFeatureIndex = featureDefinition.getFeatureIndex('ph_cvox')
                 // iterate over all units
                 for (def u = 0; u < unitFile.numberOfUnits; u++) {
                     def sylSegs = []
@@ -526,7 +526,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
                     def lastSegInSyl = u + featureVector.getFeatureAsInt(numSegsFromEndStartFeatureIndex)
                     // reconstruct relevant features per segment in syllable
                     (firstSegInSyl..lastSegInSyl).each {
-                        featureVector = featureFile.getFeatureVector it
+                        featureVector = featureFile.getFeatureVector(it)
                         def phone = featureVector.getFeatureAsString(phoneFeatureIndex, featureDefinition)
                         def isVowel = featureVector.getFeatureAsString(isVowelFeatureIndex, featureDefinition) == '+'
                         def isVoicedConsonant = featureVector.getFeatureAsString(isVoicedConsonantFeatureIndex, featureDefinition) == '+'
@@ -545,17 +545,17 @@ class VoicebuildingPlugin implements Plugin<Project> {
                         def firstVoicedSeg = voicedSegs.first()
                         def firstVoicedDatagrams = waveTimeline.getDatagrams(unitFile.getUnit(firstVoicedSeg['unitIndex']), unitFile.sampleRate)
                         def leftF0 = waveTimeline.sampleRate / firstVoicedDatagrams.first().duration
-                        leftFeats.println "$leftF0 ${featureDefinition.toFeatureString firstVoicedSeg['features']}"
+                        leftFeats.println "$leftF0 ${featureDefinition.toFeatureString(firstVoicedSeg['features'])}"
                         // mid F0
                         def firstVowel = voicedSegs.grep { it['isVowel'] }.first()
                         def vowelDatagrams = waveTimeline.getDatagrams(unitFile.getUnit(firstVowel['unitIndex']), unitFile.sampleRate)
                         def midF0 = waveTimeline.sampleRate / vowelDatagrams[vowelDatagrams.length / 2 as int].duration
-                        midFeats.println "$midF0 ${featureDefinition.toFeatureString firstVowel['features']}"
+                        midFeats.println "$midF0 ${featureDefinition.toFeatureString(firstVowel['features'])}"
                         // right F0
                         def lastVoicedSeg = voicedSegs.last()
                         def lastVoicedDatagrams = waveTimeline.getDatagrams(unitFile.getUnit(lastVoicedSeg['unitIndex']), unitFile.sampleRate)
                         def rightF0 = waveTimeline.sampleRate / lastVoicedDatagrams.last().duration
-                        rightFeats.println "$rightF0 ${featureDefinition.toFeatureString lastVoicedSeg['features']}"
+                        rightFeats.println "$rightF0 ${featureDefinition.toFeatureString(lastVoicedSeg['features'])}"
                     }
                     // increment to end of syllable
                     u = lastSegInSyl
@@ -571,18 +571,18 @@ class VoicebuildingPlugin implements Plugin<Project> {
             ext.descFile = project.file("$temporaryDir/f0.desc")
             outputs.files descFile
             doLast {
-                def featureFile = FeatureFileReader.getFeatureFileReader project.legacyPhoneFeatureFileWriter.featureFile.path
+                def featureFile = FeatureFileReader.getFeatureFileReader(project.legacyPhoneFeatureFileWriter.featureFile.path)
                 def featureDefinition = featureFile.featureDefinition
                 descFile.withWriter { desc ->
                     desc.println '('
                     desc.println '( f0 float )'
                     featureDefinition.featureNameArray.eachWithIndex { feature, f ->
-                        def values = featureDefinition.getPossibleValues f
+                        def values = featureDefinition.getPossibleValues(f)
                         desc.print "( $feature "
                         if (featureDefinition.isContinuousFeature(f) || values.length == 20 && values.last() == '19') {
                             desc.print 'float'
                         } else {
-                            desc.print values.collect { "\"${it.replace '"', '\\\"'}\"" }.join(' ')
+                            desc.print values.collect { "\"${it.replace('"', '\\\"')}\"" }.join(' ')
                         }
                         desc.println " )"
                     }
@@ -640,7 +640,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
             }
             dependsOn project.legacyPhoneFeatureFileWriter
             doLast {
-                def featureFile = FeatureFileReader.getFeatureFileReader project.legacyPhoneFeatureFileWriter.featureFile.path
+                def featureFile = FeatureFileReader.getFeatureFileReader(project.legacyPhoneFeatureFileWriter.featureFile.path)
                 def featureDefinition = featureFile.featureDefinition
                 [inputs.files as List, outputs.files as List].transpose().each { inFile, outFile ->
                     def wagonCartReader = new WagonCARTReader(LeafNode.LeafType.FloatLeafNode)
@@ -764,7 +764,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
         }
 
         project.task('generatePom') {
-            def pomDir = project.file("${project.sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group.replace '.', '/'}/$project.name")
+            def pomDir = project.file("${project.sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group.replace('.', '/')}/$project.name")
             def pomFile = project.file("$pomDir/pom.xml")
             def propFile = project.file("$pomDir/pom.properties")
             outputs.files project.files(pomFile, propFile)
