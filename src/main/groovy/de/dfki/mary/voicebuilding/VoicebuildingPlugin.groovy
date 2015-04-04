@@ -323,9 +323,9 @@ class VoicebuildingPlugin implements Plugin<Project> {
                 def fpm
                 try {
                     fpm = Class.forName("marytts.language.${project.voice.locale.language}.features.FeatureProcessorManager").newInstance()
-                } catch (e) {
-                    logger.info "Reflection failed: $e"
-                    logger.info "Instantiating generic FeatureProcessorManager for locale $project.voice.locale"
+                } catch (ClassNotFoundException e) {
+                    logger.warn "Reflection failed: $e"
+                    logger.warn "Instantiating generic FeatureProcessorManager for locale $project.voice.locale"
                     fpm = new FeatureProcessorManager(project.voice.locale)
                 }
                 def featureNames = fpm.listByteValuedFeatureProcessorNames().tokenize() + fpm.listShortValuedFeatureProcessorNames().tokenize()
