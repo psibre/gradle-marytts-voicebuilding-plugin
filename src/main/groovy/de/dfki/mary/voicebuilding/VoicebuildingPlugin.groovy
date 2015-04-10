@@ -29,8 +29,6 @@ import marytts.util.dom.DomUtils
 
 class VoicebuildingPlugin implements Plugin<Project> {
 
-    def basenames
-
     @Override
     void apply(Project project) {
         project.plugins.apply JavaPlugin
@@ -50,8 +48,8 @@ class VoicebuildingPlugin implements Plugin<Project> {
             voice.locale = voice.locale?.country ? new Locale(voice.locale.language, voice.locale.country) : new Locale(voice.locale.language)
             voice.localeXml = [voice.locale.language, voice.locale.country].join('-')
             voice.maryLocaleXml = voice.locale.language.equalsIgnoreCase(voice.locale.country) ? voice.locale.language : voice.localeXml
+            basenames = project.rootProject.subprojects.findAll { it.parent.name == 'data' }.collect { it.name }
         }
-        basenames = project.subprojects.findAll { it.parent.name == 'data' }.collect { it.name }
 
         project.status = project.version.endsWith('SNAPSHOT') ? 'integration' : 'release'
 
@@ -246,21 +244,21 @@ class VoicebuildingPlugin implements Plugin<Project> {
 
         project.task('legacyPraatPitchmarker', type: LegacyVoiceImportTask) {
             dependsOn project.legacyInit, project.configurePraat
-            inputs.files basenames.collect { "$project.buildDir/wav/${it}.wav" }
-            outputs.files basenames.collect { "$project.buildDir/pm/${it}.pm" }
+            inputs.files project.basenames.collect { "$project.buildDir/wav/${it}.wav" }
+            outputs.files project.basenames.collect { "$project.buildDir/pm/${it}.pm" }
         }
 
         project.task('legacyMCEPMaker', type: LegacyVoiceImportTask) {
             dependsOn project.legacyInit, project.configureSpeechTools
             inputs.files project.legacyPraatPitchmarker
-            outputs.files basenames.collect { "$project.buildDir/mcep/${it}.mcep" }
+            outputs.files project.basenames.collect { "$project.buildDir/mcep/${it}.mcep" }
         }
 
         project.task('generateAllophones') {
             dependsOn project.legacyInit
-            inputs.files basenames.collect { "$project.buildDir/text/${it}.txt" }
+            inputs.files project.basenames.collect { "$project.buildDir/text/${it}.txt" }
             def destDir = project.file("$project.buildDir/prompt_allophones")
-            outputs.files basenames.collect { "$destDir/${it}.xml" }
+            outputs.files project.basenames.collect { "$destDir/${it}.xml" }
             def mary
             def parser = new XmlSlurper(false, false)
             doFirst {
@@ -300,19 +298,19 @@ class VoicebuildingPlugin implements Plugin<Project> {
 
         project.task('legacyPhoneUnitLabelComputer', type: LegacyVoiceImportTask) {
             dependsOn project.legacyInit
-            inputs.files basenames.collect { "$project.buildDir/lab/${it}.lab" }
-            outputs.files basenames.collect { "$project.buildDir/phonelab/${it}.lab" }
+            inputs.files project.basenames.collect { "$project.buildDir/lab/${it}.lab" }
+            outputs.files project.basenames.collect { "$project.buildDir/phonelab/${it}.lab" }
         }
 
         project.task('legacyHalfPhoneUnitLabelComputer', type: LegacyVoiceImportTask) {
             dependsOn project.legacyInit
-            inputs.files basenames.collect { "$project.buildDir/lab/${it}.lab" }
-            outputs.files basenames.collect { "$project.buildDir/halfphonelab/${it}.hplab" }
+            inputs.files project.basenames.collect { "$project.buildDir/lab/${it}.lab" }
+            outputs.files project.basenames.collect { "$project.buildDir/halfphonelab/${it}.hplab" }
         }
 
         project.task('legacyTranscriptionAligner', type: LegacyVoiceImportTask) {
-            inputs.files project.generateAllophones, basenames.collect { "$project.buildDir/lab/${it}.lab" }
-            outputs.files basenames.collect { "$project.buildDir/allophones/${it}.xml" }
+            inputs.files project.generateAllophones, project.basenames.collect { "$project.buildDir/lab/${it}.lab" }
+            outputs.files project.basenames.collect { "$project.buildDir/allophones/${it}.xml" }
         }
 
         project.task('generateFeatureList') {
@@ -336,7 +334,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
         project.task('generatePhoneUnitFeatures') {
             dependsOn project.legacyInit, project.generateFeatureList
             inputs.files project.legacyTranscriptionAligner
-            outputs.files basenames.collect { "$project.buildDir/phonefeatures/${it}.pfeats" }
+            outputs.files project.basenames.collect { "$project.buildDir/phonefeatures/${it}.pfeats" }
             def mary
             doFirst {
                 mary = new LocalMaryInterface()
@@ -357,7 +355,7 @@ class VoicebuildingPlugin implements Plugin<Project> {
         project.task('generateHalfPhoneUnitFeatures') {
             dependsOn project.legacyInit, project.generateFeatureList
             inputs.files project.legacyTranscriptionAligner
-            outputs.files basenames.collect { "$project.buildDir/halfphonefeatures/${it}.hpfeats" }
+            outputs.files project.basenames.collect { "$project.buildDir/halfphonefeatures/${it}.hpfeats" }
             def mary
             doFirst {
                 mary = new LocalMaryInterface()
