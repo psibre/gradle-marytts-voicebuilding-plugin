@@ -42,5 +42,3 @@ bintray {
     pkg.userOrg = 'marytts'
     pkg.repo = 'marytts'
 }
-
-wrapper.gradleVersion '2.3'
