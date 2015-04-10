@@ -259,15 +259,14 @@ class VoicebuildingPlugin implements Plugin<Project> {
             inputs.files project.basenames.collect { "$project.buildDir/text/${it}.txt" }
             def destDir = project.file("$project.buildDir/prompt_allophones")
             outputs.files project.basenames.collect { "$destDir/${it}.xml" }
-            def mary
-            def parser = new XmlSlurper(false, false)
             doFirst {
                 destDir.mkdirs()
-                mary = new LocalMaryInterface()
-                mary.locale = project.voice.locale
-                mary.outputType = 'ALLOPHONES'
             }
             doLast {
+                def parser = new XmlSlurper(false, false)
+                def mary = new LocalMaryInterface()
+                mary.locale = project.voice.locale
+                mary.outputType = 'ALLOPHONES'
                 [inputs.files as List, outputs.files as List].transpose().each { inFile, outFile ->
                     def doc = mary.generateXML(inFile.text)
                     def xmlStr = XmlUtil.serialize(doc.documentElement)
