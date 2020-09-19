@@ -411,6 +411,15 @@ class VoicebuildingLegacyPlugin implements Plugin<Project> {
                 testImplementation "junit:junit:4.13"
             }
         }
+
+        project.task('dumpVoiceData', type: DumpVoiceData) {
+            waveTimelineFile = project.waveTimelineMaker.destFile
+            basenameTimelineFile = project.basenameTimelineMaker.destFile
+            halfPhoneUnitFile = project.halfPhoneUnitFileMaker.destFile
+            acousticFeatureFile = project.acousticFeatureFileMaker.destFile
+            textGridFile = project.legacyBuildDir.get().file("dumped.TextGrid")
+            wavFile = project.legacyBuildDir.get().file("dumped.wav")
+        }
     }
 
 }
