@@ -12,13 +12,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             java_version: 8
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             java_version: 11
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             java_version: 17
-          - os: macos-latest
+          - os: macos-13
             java_version: 11
       fail-fast: false
     runs-on: ${{ matrix.os }}
