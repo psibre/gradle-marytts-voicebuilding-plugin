@@ -30,7 +30,7 @@ class VoicebuildingDataPlugin implements Plugin<Project> {
                     exclude group: 'gov.nist.math', module: 'Jampack'
                 }
             }
-            marytts group: 'de.dfki.mary', name: 'marytts-voicebuilding', version: '0.2.1'
+            marytts group: 'de.dfki.mary', name: 'marytts-voicebuilding', version: '0.2.2'
         }
 
         def templateTask = project.task('templates', type: CopyClasspathResources) {
