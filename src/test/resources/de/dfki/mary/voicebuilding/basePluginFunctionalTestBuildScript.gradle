@@ -136,6 +136,15 @@ task testGeneratePomFileForMavenJavaPublication(group: 'Verification') {
                         url voiceLicenseUrl
                     }
                 }
+                dependencyManagement {
+                    dependencies {
+                        dependency {
+                            groupId 'de.dfki.lt.jtok'
+                            artifactId 'jtok-core'
+                            version '1.9.4'
+                        }
+                    }
+                }
                 delegate.dependencies {
                     dependency {
                         groupId 'de.dfki.mary'
