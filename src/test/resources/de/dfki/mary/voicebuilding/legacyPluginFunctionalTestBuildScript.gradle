@@ -489,7 +489,7 @@ task testLegacyZip(group: 'Verification') {
                 "lib/voices/$voiceName/joinCostFeatures.mry",
                 "lib/voices/$voiceName/timeline_basenames.mry",
                 "lib/voices/$voiceName/timeline_waveforms.mry",
-                "lib/$jar.archiveName"
+                "lib/${jar.archiveFileName.get()}"
         ] as Set
         assert actual == expected
     }
