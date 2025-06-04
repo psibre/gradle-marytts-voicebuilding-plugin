@@ -7,52 +7,41 @@ plugins {
 
 group 'de.dfki.mary'
 version '5.5-SNAPSHOT'
-description 'A replacement (incubating) for the legacy VoiceImportTools in MaryTTS'
+description 'A replacement for the legacy VoiceImportTools in MaryTTS'
 
 sourceCompatibility = '1.8'
 
 gradlePlugin {
+    website = 'http://mary.dfki.de'
+    vcsUrl = 'https://github.com/marytts/gradle-marytts-voicebuilding-plugin'
     plugins {
         base {
             id = 'de.dfki.mary.voicebuilding-base'
             implementationClass = 'de.dfki.mary.voicebuilding.VoicebuildingBasePlugin'
+            displayName = 'Voicebuilding Base Plugin'
+            description = project.description
+            tags.set(['TTS', 'speech synthesis', 'voicebuilding'])
         }
         data {
             id = 'de.dfki.mary.voicebuilding-data'
             implementationClass = 'de.dfki.mary.voicebuilding.VoicebuildingDataPlugin'
+            displayName = 'Voicebuilding Data Plugin'
+            description = project.description
+            tags.set(['TTS', 'speech synthesis', 'voicebuilding'])
         }
         festvox {
             id = 'de.dfki.mary.voicebuilding-festvox'
             implementationClass = 'de.dfki.mary.voicebuilding.VoicebuildingFestvoxPlugin'
+            displayName = 'Voicebuilding FestVox Plugin'
+            description = project.description
+            tags.set(['TTS', 'speech synthesis', 'voicebuilding'])
         }
         legacy {
             id = 'de.dfki.mary.voicebuilding-legacy'
             implementationClass = 'de.dfki.mary.voicebuilding.VoicebuildingLegacyPlugin'
-        }
-    }
-}
-
-pluginBundle {
-    website = 'http://mary.dfki.de'
-    vcsUrl = 'https://github.com/marytts/gradle-marytts-voicebuilding-plugin'
-    description = 'A replacement for the legacy VoiceImportTools in MaryTTS'
-    tags = ['TTS', 'speech synthesis', 'voicebuilding']
-    plugins {
-        base {
-            id = 'de.dfki.mary.voicebuilding-base'
-            displayName = 'Voicebuilding Base Plugin'
-        }
-        data {
-            id = 'de.dfki.mary.voicebuilding-data'
-            displayName = 'Voicebuilding Data Plugin'
-        }
-        festvox {
-            id = 'de.dfki.mary.voicebuilding-festvox'
-            displayName = 'Voicebuilding FestVox Plugin'
-        }
-        legacy {
-            id = 'de.dfki.mary.voicebuilding-legacy'
             displayName = 'Voicebuilding Legacy Plugin'
+            description = project.description
+            tags.set(['TTS', 'speech synthesis', 'voicebuilding'])
         }
     }
 }
